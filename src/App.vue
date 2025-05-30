@@ -12,6 +12,7 @@ import {
   List,
   User,
   SwitchButton,
+  Trophy,
 } from '@element-plus/icons-vue';
 
 const router = useRouter();
@@ -42,6 +43,11 @@ const menuItems = [
     index: '/ideas',
     title: '想法记录',
     icon: Notebook,
+  },
+  {
+    index: '/achievements',
+    title: '成就日记',
+    icon: Trophy,
   },
   {
     index: '/calendar',

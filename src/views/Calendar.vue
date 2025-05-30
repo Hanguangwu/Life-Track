@@ -5,8 +5,8 @@
       <div class="left-actions">
         <h2>日历视图</h2>
         <el-radio-group v-model="viewMode" @change="handleViewModeChange">
-          <el-radio-button label="month">月视图</el-radio-button>
-          <el-radio-button label="week">周视图</el-radio-button>
+          <el-radio-button value="month">月视图</el-radio-button>
+          <el-radio-button value="week">周视图</el-radio-button>
         </el-radio-group>
       </div>
       
@@ -33,7 +33,7 @@
 
     <!-- 日历主体 -->
     <div class="calendar-container card">
-      <el-loading-directive v-loading="todoStore.loading">
+      <div v-loading="todoStore.loading">
         <!-- 月视图 -->
         <div v-if="viewMode === 'month'" class="month-view">
           <!-- 星期标题 -->
@@ -107,7 +107,7 @@
             </div>
           </div>
         </div>
-      </el-loading-directive>
+      </div>
     </div>
 
     <!-- 选中日期的详情 -->

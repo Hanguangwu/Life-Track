@@ -55,6 +55,18 @@
           </div>
         </div>
       </el-card>
+
+      <el-card class="stat-card" shadow="hover">
+        <div class="stat-content">
+          <div class="stat-icon achievements">
+            <el-icon size="24"><Trophy /></el-icon>
+          </div>
+          <div class="stat-info">
+            <h3>{{ achievementStore.totalCount }}</h3>
+            <p>成就日记</p>
+          </div>
+        </div>
+      </el-card>
     </div>
 
     <!-- 内容区域 -->
@@ -163,6 +175,56 @@
           </div>
         </div>
       </el-card>
+
+      <!-- 最近的成就日记 -->
+      <el-card class="recent-achievements" shadow="hover">
+        <template #header>
+          <div class="card-header">
+            <h3>最近的成就日记</h3>
+            <el-button type="primary" size="small" @click="$router.push('/achievements')">
+              查看全部
+            </el-button>
+          </div>
+        </template>
+        
+        <div v-if="recentAchievements.length === 0" class="empty-state">
+          <el-icon size="48" color="#c0c4cc"><Trophy /></el-icon>
+          <p>暂无成就日记</p>
+          <el-button type="primary" @click="$router.push('/achievements')">
+            记录第一个成就
+          </el-button>
+        </div>
+        
+        <div v-else class="achievement-list">
+          <div 
+            v-for="achievement in recentAchievements" 
+            :key="achievement.id" 
+            class="achievement-item"
+          >
+            <div class="achievement-header">
+              <h4>{{ achievement.title }}</h4>
+              <span class="achievement-date">{{ formatDate(achievement.date) }}</span>
+            </div>
+            <p class="achievement-content">{{ truncateText(achievement.content, 100) }}</p>
+            <div class="achievement-meta">
+              <div class="tags">
+                <el-tag 
+                  v-for="tag in achievement.tags" 
+                  :key="tag" 
+                  size="small" 
+                  type="info"
+                >
+                  {{ tag }}
+                </el-tag>
+              </div>
+              <div v-if="achievement.images && achievement.images.length > 0" class="image-count">
+                <el-icon><Picture /></el-icon>
+                {{ achievement.images.length }}张图片
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-card>
     </div>
   </div>
 </template>
@@ -171,6 +233,7 @@
 import { computed, onMounted } from 'vue';
 import { useTodoStore } from '../stores/todo';
 import { useIdeaStore } from '../stores/idea';
+import { useAchievementStore } from '../stores/achievement';
 import { PRIORITY_OPTIONS } from '../types';
 import dayjs from 'dayjs';
 import {
@@ -178,11 +241,14 @@ import {
   Check,
   Star,
   Document,
-  Memo
+  Memo,
+  Trophy,
+  Picture
 } from '@element-plus/icons-vue';
 
 const todoStore = useTodoStore();
 const ideaStore = useIdeaStore();
+const achievementStore = useAchievementStore();
 
 // 当前日期
 const currentDate = computed(() => {
@@ -199,6 +265,11 @@ const recentTodos = computed(() => {
 // 最近的想法（最多5个）
 const recentIdeas = computed(() => {
   return ideaStore.ideas.slice(0, 5);
+});
+
+// 最近的成就日记（最多5个）
+const recentAchievements = computed(() => {
+  return achievementStore.achievements.slice(0, 5);
 });
 
 /**
@@ -264,6 +335,7 @@ onMounted(async () => {
     await Promise.all([
       todoStore.fetchTodos(),
       ideaStore.loadIdeas(),
+      achievementStore.fetchAchievements()
     ]);
   } catch (error) {
     console.error('Failed to load dashboard data:', error);
@@ -341,6 +413,10 @@ onMounted(async () => {
   background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
 }
 
+.stat-icon.achievements {
+  background-color: #67c23a;
+}
+
 .stat-info h3 {
   font-size: 24px;
   font-weight: 600;
@@ -358,6 +434,13 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
@@ -496,5 +579,74 @@ onMounted(async () => {
 .created-date {
   font-size: 12px;
   color: #909399;
+}
+
+/* 成就日记样式 */
+.recent-achievements {
+  grid-column: 1 / -1;
+}
+
+.achievement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.achievement-item {
+  padding: 12px;
+  border-radius: 4px;
+  background-color: #f5f7fa;
+  transition: all 0.3s;
+}
+
+.achievement-item:hover {
+  background-color: #ecf5ff;
+  transform: translateY(-2px);
+}
+
+.achievement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.achievement-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.achievement-date {
+  font-size: 12px;
+  color: #909399;
+}
+
+.achievement-content {
+  margin: 8px 0;
+  color: #606266;
+  line-height: 1.5;
+}
+
+.achievement-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.achievement-meta .tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.image-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #909399;
+  font-size: 12px;
 }
 </style>

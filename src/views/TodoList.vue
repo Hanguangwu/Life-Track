@@ -9,9 +9,9 @@
         </el-button>
         
         <el-radio-group v-model="currentFilter" @change="handleFilterChange">
-          <el-radio-button label="all">全部 ({{ todoStore.totalCount }})</el-radio-button>
-          <el-radio-button label="pending">待完成 ({{ todoStore.pendingCount }})</el-radio-button>
-          <el-radio-button label="completed">已完成 ({{ todoStore.completedCount }})</el-radio-button>
+          <el-radio-button value="all">全部 ({{ todoStore.totalCount }})</el-radio-button>
+          <el-radio-button value="pending">待完成 ({{ todoStore.pendingCount }})</el-radio-button>
+          <el-radio-button value="completed">已完成 ({{ todoStore.completedCount }})</el-radio-button>
         </el-radio-group>
       </div>
       
@@ -30,7 +30,7 @@
 
     <!-- 待办事项列表 -->
     <div class="todo-container">
-      <el-loading-directive v-loading="todoStore.loading">
+      <div v-loading="todoStore.loading">
         <div v-if="sortedTodos.length === 0" class="empty-state card">
           <el-icon size="64" color="#c0c4cc"><Document /></el-icon>
           <h3>暂无待办事项</h3>
@@ -109,7 +109,8 @@
             </div>
           </el-card>
         </div>
-      </el-loading-directive>
+      </div>
+      </div>
     </div>
 
     <!-- 创建/编辑对话框 -->
@@ -195,7 +196,6 @@
         </el-button>
       </template>
     </el-dialog>
-  </div>
 </template>
 
 <script setup lang="ts">

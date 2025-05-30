@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '../views/Dashboard.vue'
 import TodoList from '../views/TodoList.vue'
 import IdeaList from '../views/IdeaList.vue'
+import AchievementList from '../views/AchievementList.vue'
 import Calendar from '../views/Calendar.vue'
 import Settings from '../views/Settings.vue'
 import Auth from '../views/Auth.vue'
@@ -38,6 +39,12 @@ const router = createRouter({
       path: '/ideas',
       name: 'ideas',
       component: IdeaList,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/achievements',
+      name: 'achievements',
+      component: AchievementList,
       meta: { requiresAuth: true }
     },
     {

@@ -5,62 +5,6 @@
       <p>配置您的应用偏好设置</p>
     </div>
 
-    <!-- 数据库设置 -->
-    <!-- <el-card class="settings-section" shadow="hover">
-      <template #header>
-        <div class="section-header">
-          <el-icon><Database /></el-icon>
-          <span>数据库设置</span>
-        </div>
-      </template>
-      
-      <el-form label-width="120px">
-        <el-form-item label="连接状态">
-          <el-tag :type="dbStatus.connected ? 'success' : 'danger'">
-            {{ dbStatus.connected ? '已连接' : '未连接' }}
-          </el-tag>
-          <el-button 
-            type="primary" 
-            size="small" 
-            @click="testConnection" 
-            :loading="dbStatus.testing"
-            style="margin-left: 12px;"
-          >
-            测试连接
-          </el-button>
-        </el-form-item>
-        
-        <el-form-item label="数据库URL">
-          <el-input 
-            v-model="dbConfig.url" 
-            placeholder="mongodb://localhost:27017/life_track"
-            :disabled="!editMode.database"
-          />
-        </el-form-item>
-        
-        <el-form-item>
-          <el-button 
-            v-if="!editMode.database" 
-            @click="editMode.database = true"
-          >
-            编辑
-          </el-button>
-          <template v-else>
-            <el-button 
-              type="primary" 
-              @click="saveDbConfig" 
-              :loading="saving.database"
-            >
-              保存
-            </el-button>
-            <el-button @click="cancelDbEdit">
-              取消
-            </el-button>
-          </template>
-        </el-form-item>
-      </el-form>
-    </el-card> -->
-
     <!-- 界面设置 -->
     <el-card class="settings-section" shadow="hover">
       <template #header>
@@ -73,9 +17,9 @@
       <el-form label-width="120px">
         <el-form-item label="主题模式">
           <el-radio-group v-model="uiConfig.theme" @change="saveUiConfig">
-            <el-radio label="light">浅色模式</el-radio>
-            <el-radio label="dark">深色模式</el-radio>
-            <el-radio label="auto">跟随系统</el-radio>
+            <el-radio value="light">浅色模式</el-radio>
+            <el-radio value="dark">深色模式</el-radio>
+            <el-radio value="auto">跟随系统</el-radio>
           </el-radio-group>
         </el-form-item>
         
@@ -178,6 +122,10 @@
             <div class="stat-item">
               <span class="stat-label">想法记录：</span>
               <span class="stat-value">{{ dataStats.ideas }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">成就日记：</span>
+              <span class="stat-value">{{ dataStats.achievements }}</span>
             </div>
             <div class="stat-item">
               <span class="stat-label">存储空间：</span>
@@ -289,6 +237,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useTodoStore } from '../stores/todo';
 import { useIdeaStore } from '../stores/idea';
+import { useAchievementStore } from '../stores/achievement';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
   Monitor,
@@ -299,7 +248,7 @@ import {
 
 const todoStore = useTodoStore();
 const ideaStore = useIdeaStore();
-
+const achievementStore = useAchievementStore();
 // 响应式数据
 
 const exporting = reactive({
@@ -316,13 +265,6 @@ const importing = ref(false);
 const checkingUpdates = ref(false);
 const selectedFile = ref<File | null>(null);
 const uploadRef = ref();
-
-// 数据库状态已移除
-
-// 配置数据
-// const dbConfig = reactive({
-//   url: 'mongodb://localhost:27017/life_track',
-// });
 
 const uiConfig = reactive({
   theme: 'light',
@@ -342,7 +284,8 @@ const notificationConfig = reactive({
 const dataStats = reactive({
   todos: 0,
   ideas: 0,
-  storage: '0 MB',
+  achievements: 0,
+  storage: '0 MB'
 });
 
 // 应用信息
@@ -353,33 +296,6 @@ const appInfo = reactive({
 });
 
 // 方法
-
-/**
- * 保存数据库配置
- */
-// const saveDbConfig = async () => {
-//   saving.database = true;
-//   try {
-//     // 这里应该调用 Tauri 命令保存配置
-//     await new Promise(resolve => setTimeout(resolve, 500)); // 模拟保存
-//     editMode.database = false;
-//     ElMessage.success('数据库配置已保存');
-//   } catch (error) {
-//     ElMessage.error('保存配置失败');
-//   } finally {
-//     saving.database = false;
-//   }
-// };
-
-/**
- * 取消数据库编辑
- */
-// const cancelDbEdit = () => {
-//   editMode.database = false;
-//   // 重置配置
-//   dbConfig.url = 'mongodb://localhost:27017/life_track';
-// };
-
 /**
  * 保存界面配置
  */
@@ -415,13 +331,14 @@ const exportData = async (format: 'json' | 'csv') => {
     // 获取所有数据
     const todos = todoStore.todos;
     const ideas = ideaStore.ideas;
+    const achievements = achievementStore.achievements;
     
     let data: string;
     let filename: string;
     let mimeType: string;
     
     if (format === 'json') {
-      data = JSON.stringify({ todos, ideas }, null, 2);
+      data = JSON.stringify({ todos, ideas, achievements }, null, 2);
       filename = `life_track_backup_${new Date().toISOString().split('T')[0]}.json`;
       mimeType = 'application/json';
     } else {
@@ -429,7 +346,8 @@ const exportData = async (format: 'json' | 'csv') => {
       const csvData = [
         'Type,Title,Content,Category,Created,Completed',
         ...todos.map(todo => `Todo,"${todo.title}","${todo.description || ''}",${todo.category},${todo.created_at},${todo.completed}`),
-        ...ideas.map(idea => `Idea,"${idea.title}","${idea.content}",${idea.category},${idea.created_at},false`)
+        ...ideas.map(idea => `Idea,"${idea.title}","${idea.content}",${idea.category},${idea.created_at},false`),
+        ...achievements.map(achievement => `Achievement,"${achievement.title}","${achievement.content}",${achievement.tags?.join(',') || ''},${achievement.created_at},false`)
       ].join('\n');
       data = csvData;
       filename = `life_track_backup_${new Date().toISOString().split('T')[0]}.csv`;
@@ -480,7 +398,8 @@ const importData = async () => {
     // 刷新数据
     await Promise.all([
       todoStore.fetchTodos(),
-      ideaStore.loadIdeas()
+      ideaStore.loadIdeas(),
+      achievementStore.fetchAchievements()
     ]);
   } catch (error) {
     ElMessage.error('数据导入失败，请检查文件格式');
@@ -541,7 +460,8 @@ const clearAllData = async () => {
     ElMessage.success('所有数据已清空');
     await Promise.all([
       todoStore.fetchTodos(),
-      ideaStore.loadIdeas()
+      ideaStore.loadIdeas(),
+      achievementStore.fetchAchievements()
     ]);
   } catch (error) {
     // 用户取消操作
@@ -591,11 +511,13 @@ const loadConfigs = () => {
 const updateDataStats = () => {
   dataStats.todos = todoStore.todos.length;
   dataStats.ideas = ideaStore.ideas.length;
+  dataStats.achievements = achievementStore.achievements.length;
   
   // 计算存储空间（简化版）
   const totalSize = JSON.stringify({
     todos: todoStore.todos,
-    ideas: ideaStore.ideas
+    ideas: ideaStore.ideas,
+    achievements: achievementStore.achievements
   }).length;
   dataStats.storage = `${(totalSize / 1024 / 1024).toFixed(2)} MB`;
 };
@@ -605,7 +527,8 @@ onMounted(async () => {
   loadConfigs();
   await Promise.all([
     todoStore.fetchTodos(),
-    ideaStore.loadIdeas()
+    ideaStore.loadIdeas(),
+    achievementStore.fetchAchievements()
   ]);
   updateDataStats();
 });

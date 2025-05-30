@@ -97,3 +97,40 @@ export const CATEGORY_OPTIONS = [
   '娱乐',
   '其他',
 ];
+
+/**
+ * 成就日记接口定义
+ */
+export interface Achievement {
+  id?: string;
+  title: string;
+  content: string;
+  date: string;
+  images: string[]; // 图片URL数组
+  image_timestamps: string[]; // 图片时间戳数组，用于删除时定位R2中的文件
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * 创建成就日记请求接口
+ */
+export interface CreateAchievementRequest {
+  title: string;
+  content: string;
+  date: string;
+  images?: File[]; // 上传的图片文件
+  tags?: string[];
+}
+
+/**
+ * 更新成就日记请求接口
+ */
+export interface UpdateAchievementRequest {
+  title?: string;
+  content?: string;
+  date?: string;
+  images?: File[]; // 新上传的图片文件
+  tags?: string[];
+}

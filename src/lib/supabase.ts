@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 // 从环境变量获取Supabase配置
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
 /**
  * Supabase客户端实例
  */
@@ -17,7 +18,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export const TABLES = {
   TODOS: 'todos',
   IDEAS: 'ideas',
-  PROFILES: 'profiles'
+  PROFILES: 'profiles',
+  ACHIEVEMENTS: 'achievements'
 } as const
 
 /**
@@ -54,6 +56,19 @@ export interface SupabaseProfile {
   email: string
   username?: string
   avatar_url?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface SupabaseAchievement {
+  id: string
+  user_id: string
+  title: string
+  content: string
+  date: string
+  images: string[]
+  image_timestamps: string[]
+  tags: string[]
   created_at: string
   updated_at: string
 }

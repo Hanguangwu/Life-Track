@@ -9,8 +9,8 @@
         </el-button>
         
         <el-radio-group v-model="currentFilter" @change="handleFilterChange">
-          <el-radio-button label="all">全部 ({{ ideaStore.totalCount }})</el-radio-button>
-          <el-radio-button label="favorites">收藏 ({{ ideaStore.favoriteCount }})</el-radio-button>
+          <el-radio-button value="all">全部 ({{ ideaStore.totalCount }})</el-radio-button>
+          <el-radio-button value="favorites">收藏 ({{ ideaStore.favoriteCount }})</el-radio-button>
         </el-radio-group>
       </div>
       
@@ -67,9 +67,9 @@
 
     <!-- 想法列表 -->
     <div class="idea-container">
-      <el-loading-directive v-loading="ideaStore.loading">
+      <div v-loading="ideaStore.loading">
         <div v-if="sortedIdeas.length === 0" class="empty-state card">
-          <el-icon size="64" color="#c0c4cc"><Lightbulb /></el-icon>
+          <el-icon size="64" color="#c0c4cc"><Memo /></el-icon>
           <h3>暂无想法记录</h3>
           <p>点击上方按钮记录您的第一个想法</p>
         </div>
@@ -140,7 +140,7 @@
             </div>
           </el-card>
         </div>
-      </el-loading-directive>
+      </div>
     </div>
 
     <!-- 创建/编辑对话框 -->
@@ -226,7 +226,8 @@ import {
   Refresh,
   Search,
   Star,
-  StarFilled
+  StarFilled,
+  Memo
 } from '@element-plus/icons-vue';
 
 const ideaStore = useIdeaStore();
