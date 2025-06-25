@@ -14,7 +14,6 @@
           v-model="selectedTags"
           multiple
           placeholder="选择标签"
-          @change="handleTagsChange"
         >
           <el-option
             v-for="tag in allTags"
@@ -25,17 +24,21 @@
         </el-select>
         
         <el-date-picker
-          v-model="dateRange"
+          v-model="localDateRange"
           type="daterange"
           range-separator="至"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
           format="YYYY-MM-DD"
           value-format="YYYY-MM-DD"
-          @change="handleDateRangeChange"
         />
         
-        <el-button @click="clearFilters">清除过滤</el-button>
+        <el-button type="primary" @click="applyFilters">
+          <el-icon><Search /></el-icon>
+          应用筛选
+        </el-button>
+        
+        <el-button @click="clearFilters">清除筛选</el-button>
       </div>
       
       <el-button type="primary" @click="showCreateDialog = true">
@@ -251,9 +254,10 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type UploadFile, type UploadFiles } from 'element-plus'
-import { Plus, Edit, Delete, Calendar } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Calendar, Search } from '@element-plus/icons-vue'
 import { useAchievementStore } from '../stores/achievement'
 import type { Achievement, CreateAchievementRequest, UpdateAchievementRequest } from '../types'
+import { storeToRefs } from 'pinia';
 
 const achievementStore = useAchievementStore()
 
@@ -264,6 +268,9 @@ const submitting = ref(false)
 const formRef = ref<FormInstance>()
 const uploadRef = ref()
 const fileList = ref<UploadFile[]>([])
+
+// 本地筛选状态
+const localDateRange = ref<[string, string] | null>(null)
 
 // 表单数据
 const form = reactive({
@@ -294,31 +301,56 @@ const {
   totalCount, 
   recentAchievements, 
   allTags, 
-  loading,
+  loading
+} = storeToRefs(achievementStore)
+
+const { 
   currentFilter,
   selectedTags,
-  dateRange
 } = achievementStore
 
 // 方法
 const handleFilterChange = (value: string) => {
   achievementStore.setFilter(value as 'all' | 'recent' | 'tagged')
-}
-
-const handleTagsChange = (tags: string[]) => {
-  achievementStore.setSelectedTags(tags)
-}
-
-const handleDateRangeChange = (range: [string, string] | null) => {
-  if (range) {
-    achievementStore.setDateRange({ start: range[0], end: range[1] })
-  } else {
-    achievementStore.setDateRange(null)
+  
+  // 如果选择了"全部"或"最近30天"，自动应用筛选
+  if (value === 'all' || value === 'recent') {
+    applyFilters()
   }
 }
 
+/**
+ * 应用筛选条件
+ */
+const applyFilters = () => {
+  // 处理标签筛选
+  if (currentFilter === 'tagged' && selectedTags.length === 0) {
+    achievementStore.setSelectedTags(selectedTags)
+  } else if (currentFilter !== 'tagged') {
+    // 如果不是按标签筛选，清空已选标签
+    achievementStore.setSelectedTags([])
+  }
+  
+  // 处理日期范围筛选
+    if (localDateRange.value && localDateRange.value.length === 2) {
+    achievementStore.setDateRange({ 
+      start: localDateRange.value[0], 
+      end: localDateRange.value[1] 
+    })
+  } else {
+    achievementStore.setDateRange(null)
+  }
+  
+  ElMessage.success('筛选条件已应用')
+}
+
+/**
+ * 清除所有筛选条件
+ */
 const clearFilters = () => {
   achievementStore.clearFilters()
+  localDateRange.value = null
+  ElMessage.info('已清除所有筛选条件')
 }
 
 const formatDate = (dateStr: string) => {
@@ -462,6 +494,11 @@ const resetForm = () => {
 onMounted(async () => {
   try {
     await achievementStore.fetchAchievements()
+    
+    // 同步本地筛选状态与store状态
+    if (achievementStore.dateRange) {
+      localDateRange.value = [achievementStore.dateRange.start, achievementStore.dateRange.end]
+    }
   } catch (error) {
     ElMessage.error('获取成就日记失败')
   }
@@ -484,9 +521,18 @@ onMounted(async () => {
 
 .filters {
   display: flex;
-  gap: 10px;
-  align-items: center;
+  gap: 12px;
   flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.filters .el-select {
+  min-width: 120px;
+}
+
+.filters .el-date-picker {
+  width: auto;
 }
 
 .stats {
